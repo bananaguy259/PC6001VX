@@ -18,5 +18,6 @@ linuxdeploy \
     --icon-file=$PROJECT_DIR/data/PC-6001_256.png \
     --desktop-file=$PROJECT_DIR/appimage/PC6001VX.desktop \
     --output appimage
+cp *.AppImage PC6001VX.AppImage
 mv PC6001VX*.AppImage $PROJECT_DIR/build/appimage
 echo $WORKDIR
