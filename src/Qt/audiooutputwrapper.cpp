@@ -164,12 +164,6 @@ AudioOutputWrapper::~AudioOutputWrapper()
 void AudioOutputWrapper::start()
 {
 	AudioBuffer->open(QIODevice::ReadOnly | QIODevice::Unbuffered);
-	// バックエンド側のバッファサイズ
-	// OSやバックエンド実装によって最適値が異なる。
-	// デフォルト値で音の再生に支障がある場合は明示的に設定する。
-#ifdef Q_OS_ANDROID
-	AudioSink->setBufferSize(44100/30);
-#endif
 	if (!AudioSink.isNull()){
 		AudioSink->stop(); // いったん止めたほうが安定する
 		AudioSink->start(AudioBuffer);
