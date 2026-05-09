@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui widgets network
+QT += core gui widgets network multimedia
 
 TARGET = PC6001VX
 TEMPLATE = app
@@ -123,22 +123,11 @@ win32 {
 }
 
 !contains(DEFINES, NOAVI) {
-    win32 {
-        FFMPEG_VER = 8.0
-        packagesExist(libavformat-private$${FFMPEG_VER}) {
-            DEFINES += __STDC_CONSTANT_MACROS __STDC_FORMAT_MACROS
-            PKGCONFIG += libavformat-private$${FFMPEG_VER} libavcodec-private$${FFMPEG_VER} libswscale-private$${FFMPEG_VER} \
-                        libswresample-private$${FFMPEG_VER} libavutil-private$${FFMPEG_VER}
-        } else {
-            DEFINES += NOAVI
-        }
+    packagesExist(libavformat) {
+        DEFINES += __STDC_CONSTANT_MACROS __STDC_FORMAT_MACROS
+        PKGCONFIG += libavformat libavcodec libswscale libswresample libavutil
     } else {
-        packagesExist(libavformat) {
-            DEFINES += __STDC_CONSTANT_MACROS __STDC_FORMAT_MACROS
-            PKGCONFIG += libavformat libavcodec libswscale libswresample libavutil
-        } else {
-            DEFINES += NOAVI
-        }
+        DEFINES += NOAVI
     }
 }
 
