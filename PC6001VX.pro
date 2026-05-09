@@ -8,7 +8,7 @@ QT += core gui widgets network multimedia
 
 TARGET = PC6001VX
 TEMPLATE = app
-VERSION = 4.3.0
+VERSION = 4.3.1
 
 QMAKE_TARGET_COMPANY = eighttails
 QMAKE_TARGET_DESCRIPTION = PC6001VX
