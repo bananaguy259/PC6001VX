@@ -14,12 +14,6 @@ $MINGW_PACKAGE_PREFIX-asciidoctor \
 $MINGW_PACKAGE_PREFIX-qt-creator \
 2>/dev/null
 
-#FFmpegをビルド
-#P6VX用に必要最低限のCODECのみ有効化しサイズを削減したビルド
-bash $SCRIPT_DIR/MSYS2Private/ffmpeg/ffmpeg.sh
-exitOnError
-
-
 #Qt6をビルド
 #3DにDirectXを有効化したビルド
 bash $SCRIPT_DIR/MSYS2Private/qt6-static-private/qt.sh

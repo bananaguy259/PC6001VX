@@ -1,9 +1,9 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(dirname $(readlink -f ${BASH_SOURCE:-$0}))
-. $SCRIPT_DIR/buildenv.sh
 QTDIR=$MINGW_PREFIX/local/qt6-static-private
-export PKG_CONFIG_PATH=$MINGW_PREFIX/local/lib/pkgconfig
+. $SCRIPT_DIR/buildenv.sh
+. $SCRIPT_DIR/MSYS2Private/qt6-static-private/qt_ffmpeg_config.sh
 
 #並列ビルド
 MAKE="make -j$NUMBER_OF_PROCESSORS"
