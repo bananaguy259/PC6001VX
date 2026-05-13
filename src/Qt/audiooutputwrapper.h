@@ -91,6 +91,7 @@ private:
 	QPointer<QAudioSink> AudioSink;
 	QPointer<QIODevice> AudioBuffer;
 	QAudio::State ExpectedState;
+	QString CurrentDevice;
 };
 #endif // NOCALLBACK
 #endif // NOSOUND

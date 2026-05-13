@@ -209,8 +209,14 @@ QAudio::State AudioOutputWrapper::state() const
 
 void AudioOutputWrapper::initDevice()
 {
-	QAudioDevice device = QMediaDevices::defaultAudioOutput();
-	qDebug() << "AudioOutputWrapper::initDevice" << device.description();
+	auto device = QMediaDevices::defaultAudioOutput();
+	auto deviceName = device.description();
+	if (CurrentDevice == deviceName){
+		// デバイス名が変更されていないのに呼ばれる場合があり、その場合は何もしない
+		return;
+	}
+	qDebug() << "AudioOutputWrapper::initDevice deviceName:" << deviceName;
+
 	// オブジェクトは作り直すがあるべき状態は呼び出し前の状態を維持する。
 	auto state = ExpectedState;
 	if (!AudioSink.isNull()){
@@ -218,7 +224,9 @@ void AudioOutputWrapper::initDevice()
 		AudioSink->deleteLater();
 	}
 	AudioSink = new QAudioSink(device, Format, this);
+	qDebug()<< "AudioOutputWrapper::initDevice bufferSize:" <<AudioSink->bufferSize();
 	ExpectedState = state;
+	CurrentDevice = deviceName;
 }
 
 void AudioOutputWrapper::recoverPlayback()
