@@ -32,7 +32,6 @@ jobs:
           pip install aqtinstall
 
           python -m aqt install-qt linux android 5.15.2 android \
-            -m qtbase \
             --outputdir $HOME/Qt
 
       - name: Add Qt to PATH
