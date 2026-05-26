@@ -66,7 +66,7 @@ INCLUDEPATH += src src/Qt src/Qt/babel
 unix:!macx {
     #Configuration for Android
     android {
-        ANDROID_TARGET_SDK_VERSION = 36
+        ANDROID_TARGET_SDK_VERSION = 34
         DEFINES += NOLIBINTL NOSINGLEAPP NOMONITOR NOAVI NO_HWACCEL ALWAYSFULLSCREEN AUTOSUSPEND
         DEFINES -= QT_NO_DEBUG_OUTPUT USEFILESYSTEM
         #Set "ROM Path in target device" to "CUSTOM_ROM_PATH environment variable on build host"
