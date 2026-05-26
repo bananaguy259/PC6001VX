@@ -8,7 +8,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -27,28 +28,35 @@ jobs:
             "platform-tools"
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '5.15.2'
-          target: 'android'
-          arch: 'android_armv7'
+        run: |
+          pip install aqtinstall
+
+          python -m aqt install-qt linux android 5.15.2 android \
+            -m qtbase \
+            --outputdir $HOME/Qt
+
+      - name: Add Qt to PATH
+        run: |
+          echo "$HOME/Qt/5.15.2/android/bin" >> $GITHUB_PATH
 
       - name: Install Linux dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential
+          sudo apt install -y \
+            build-essential \
+            make
 
       - name: Build APK
         run: |
           mkdir build
           cd build
 
-          qmake ../PC6001VX.pro \
+          $HOME/Qt/5.15.2/android/bin/qmake ../PC6001VX.pro \
             ANDROID_ABIS="armeabi-v7a"
 
           make -j$(nproc)
 
-          androiddeployqt \
+          $HOME/Qt/5.15.2/android/bin/androiddeployqt \
             --input android-libPC6001VX.so-deployment-settings.json \
             --output android-build \
             --android-platform android-34 \
