@@ -1,16 +1,14 @@
-name: Build Android APK
+name: Android Build
 
 on:
   workflow_dispatch:
-  push:
 
 jobs:
-  android:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -21,19 +19,24 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Qt for Android
+      - name: Install Android packages
+        run: |
+          sdkmanager \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "platform-tools"
+
+      - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
           version: '5.15.2'
           target: 'android'
-          arch: 'android_arm64_v8a'
+          arch: 'android_armv7'
 
-      - name: Install build tools
+      - name: Install Linux dependencies
         run: |
           sudo apt update
-          sudo apt install -y \
-            build-essential \
-            ninja-build
+          sudo apt install -y build-essential
 
       - name: Build APK
         run: |
@@ -41,7 +44,7 @@ jobs:
           cd build
 
           qmake ../PC6001VX.pro \
-            ANDROID_ABIS="arm64-v8a"
+            ANDROID_ABIS="armeabi-v7a"
 
           make -j$(nproc)
 
@@ -55,6 +58,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PC6001VX-Android
+          name: PC6001VX-APK
           path: |
             build/android-build/build/outputs/apk/**/*.apk
