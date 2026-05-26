@@ -1,25 +1,29 @@
+# Replace `src/Qt/audiooutputwrapper.cpp` with this
+
+```cpp
 #include "audiooutputwrapper.h"
 #include "qtel6.h"
 #include "p6vxapp.h"
 
 #ifndef NOSOUND
-#include <QMediaDevices>
-#include <QAudioSink>
+#include <QAudioDeviceInfo>
+#include <QAudioOutput>
 #include <QBuffer>
 #include <QMutex>
 #include <QDebug>
+#include <QTimer>
 
 #ifdef NOCALLBACK
 
 
-AudioOutputWrapper::AudioOutputWrapper(const QAudioDevice &device,
+AudioOutputWrapper::AudioOutputWrapper(const QAudioDeviceInfo &device,
 									   const QAudioFormat &format,
 									   CBF_SND cbFunc,
 									   void *cbData,
 									   int samples,
 									   QObject *parent)
 	: QObject(parent)
-	, AudioSink(new QAudioSink(device, format, this))
+	, AudioSink(new QAudioOutput(device, format, this))
 {
 	AudioSink->setBufferSize(samples * bytesPerSample());
 }
@@ -61,11 +65,12 @@ int AudioOutputWrapper::queuedAudioSamples()
 	if (AudioBuffer){
 		return AudioBuffer->bytesAvailable() / bytesPerSample();
 	}
+	return 0;
 }
 
 int AudioOutputWrapper::bytesPerSample()
 {
-	return AudioSink->format().bytesPerSample();
+	return AudioSink->format().sampleSize() / 8;
 }
 
 QAudio::State AudioOutputWrapper::state() const
@@ -112,14 +117,12 @@ public:
 protected:
 	qint64 readData(char *data, qint64 maxlen) override
 	{
-		// オーディオコールバックを呼んでバッファにデータを取り込み
 		CbFunc(CbData, reinterpret_cast<BYTE*>(data), maxlen);
 		return maxlen;
 	}
 
 	qint64 writeData(const char *data, qint64 len) override
 	{
-		// 読み取り専用なので常にエラーを返す
 		return -1;
 	}
 
@@ -137,22 +140,21 @@ AudioOutputWrapper::AudioOutputWrapper(
 	int samples,
 	QObject *parent)
 	: QObject(parent)
-	, MediaDevices(new QMediaDevices(this))
 	, ExpectedState(QAudio::StoppedState)
 {
-	Format.setChannelConfig(QAudioFormat::ChannelConfigMono);
+	Format.setChannelCount(1);
 	Format.setSampleRate(rate);
-	Format.setSampleFormat(QAudioFormat::Int16);
-	AudioBuffer = new AudioBufferWrapper(cbFunc, cbData, Format.bytesPerSample(), this);
+	Format.setSampleSize(16);
+	Format.setCodec("audio/pcm");
+	Format.setByteOrder(QAudioFormat::LittleEndian);
+	Format.setSampleType(QAudioFormat::SignedInt);
 
-	// バッファアンダーランを起こした場合に回復させる
+	AudioBuffer = new AudioBufferWrapper(cbFunc, cbData, 2, this);
+
 	QTimer* recoveryTimer = new QTimer(this);
 	connect(recoveryTimer, &QTimer::timeout, this, &AudioOutputWrapper::recoverPlayback);
 	recoveryTimer->setInterval(1000);
 	recoveryTimer->start();
-
-	// サウンドデバイスの挿抜時に出力を切り替える
-	connect(MediaDevices, &QMediaDevices::audioOutputsChanged, this, &AudioOutputWrapper::initDevice);
 
 	initDevice();
 }
@@ -165,7 +167,7 @@ void AudioOutputWrapper::start()
 {
 	AudioBuffer->open(QIODevice::ReadOnly | QIODevice::Unbuffered);
 	if (!AudioSink.isNull()){
-		AudioSink->stop(); // いったん止めたほうが安定する
+		AudioSink->stop();
 		AudioSink->start(AudioBuffer);
 	}
 	ExpectedState = QAudio::ActiveState;
@@ -209,21 +211,19 @@ QAudio::State AudioOutputWrapper::state() const
 
 void AudioOutputWrapper::initDevice()
 {
-	auto device = QMediaDevices::defaultAudioOutput();
-	auto deviceName = device.description();
+	auto device = QAudioDeviceInfo::defaultOutputDevice();
+	auto deviceName = device.deviceName();
 	if (CurrentDevice == deviceName){
-		// デバイス名が変更されていないのに呼ばれる場合があり、その場合は何もしない
 		return;
 	}
 	qDebug() << "AudioOutputWrapper::initDevice deviceName:" << deviceName;
 
-	// オブジェクトは作り直すがあるべき状態は呼び出し前の状態を維持する。
 	auto state = ExpectedState;
 	if (!AudioSink.isNull()){
 		stop();
 		AudioSink->deleteLater();
 	}
-	AudioSink = new QAudioSink(device, Format, this);
+	AudioSink = new QAudioOutput(device, Format, this);
 	qDebug()<< "AudioOutputWrapper::initDevice bufferSize:" <<AudioSink->bufferSize();
 	ExpectedState = state;
 	CurrentDevice = deviceName;
@@ -231,21 +231,16 @@ void AudioOutputWrapper::initDevice()
 
 void AudioOutputWrapper::recoverPlayback()
 {
-	// バッファアンダーランなど、予期しないイベントによって
-	// 内部で想定している状態と実際の状態に乖離が現れた場合
-	// 状態を有るべき姿に復元を試みる。
 	auto actualState = state();
 	if (actualState != ExpectedState){
 		switch (ExpectedState){
 		case QAudio::ActiveState:
-		// 現状は、音が鳴るはずなのに鳴ってないという場合のみ
-		// 再度再生状態に持っていく
-		start();
-		break;
-		// それ以外の状態では何もしない。
+			start();
+			break;
 		default:;
 		}
 	}
 }
 #endif // NOCALLBACK
 #endif
+```
