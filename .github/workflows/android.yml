@@ -1,0 +1,60 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Qt for Android
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '5.15.2'
+          target: 'android'
+          arch: 'android_arm64_v8a'
+
+      - name: Install build tools
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            build-essential \
+            ninja-build
+
+      - name: Build APK
+        run: |
+          mkdir build
+          cd build
+
+          qmake ../PC6001VX.pro \
+            ANDROID_ABIS="arm64-v8a"
+
+          make -j$(nproc)
+
+          androiddeployqt \
+            --input android-libPC6001VX.so-deployment-settings.json \
+            --output android-build \
+            --android-platform android-34 \
+            --gradle \
+            --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PC6001VX-Android
+          path: |
+            build/android-build/build/outputs/apk/**/*.apk
