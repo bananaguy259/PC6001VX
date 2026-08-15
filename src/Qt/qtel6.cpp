@@ -639,3 +639,13 @@ void QtEL6::UI_DokoLoad(const P6VPATH& path)
 	EL6::UI_DokoLoad(path);
 }
 
+void QtEL6::UI_TapeInsert(const P6VPATH& path)
+{
+	EL6::UI_TapeInsert(path);
+}
+
+void QtEL6::UI_DiskInsert(int drv, const P6VPATH& path)
+{
+	EL6::UI_DiskInsert(drv, path);
+}
+

@@ -26,6 +26,8 @@ public:
 	void UI_DokoSave( int slot );
 	void UI_DokoLoad( int slot, bool ask = false );
 	void UI_DokoLoad( const P6VPATH& path = "" );
+	void UI_TapeInsert( const P6VPATH& path = "" );
+	void UI_DiskInsert( int drv, const P6VPATH& path = "" );
 public slots:
 	void UpdateFPS();
 };
