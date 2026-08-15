@@ -1,0 +1,86 @@
+name: Android Build
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  QT_VERSION: '6.8.3'
+  ANDROID_NDK_VERSION: '27.2.12479018'
+  ANDROID_PLATFORM_VERSION: '34'
+  ANDROID_BUILD_TOOLS: '34.0.0'
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install NDK + platform + build-tools
+        run: |
+          sdkmanager --install \
+            "platforms;android-${ANDROID_PLATFORM_VERSION}" \
+            "build-tools;${ANDROID_BUILD_TOOLS}" \
+            "ndk;${ANDROID_NDK_VERSION}"
+
+      - name: Install Qt (Linux host, needed for cross tools)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: desktop
+          arch: linux_gcc_64
+          set-env: false
+
+      - name: Install Qt (Android arm64-v8a)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: android
+          arch: android_arm64_v8a
+          set-env: true
+
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - name: Configure
+        run: |
+          "${QT_ROOT_DIR}/bin/qt-cmake" \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DANDROID_SDK_ROOT="${ANDROID_SDK_ROOT}" \
+            -DANDROID_NDK_ROOT="${ANDROID_SDK_ROOT}/ndk/${ANDROID_NDK_VERSION}" \
+            -S "${{ github.workspace }}" \
+            -B "${{ github.workspace }}/build"
+
+      - name: Build APK
+        run: cmake --build "${{ github.workspace }}/build" --target apk -j"$(nproc)"
+
+      - name: Locate APK
+        id: find_apk
+        run: |
+          APK_PATH=$(find "${{ github.workspace }}/build" -name "*.apk" | head -n1)
+          if [ -z "$APK_PATH" ]; then
+            echo "No APK found!" >&2
+            exit 1
+          fi
+          echo "Found: $APK_PATH"
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PC6001VX-android-arm64-v8a
+          path: ${{ steps.find_apk.outputs.apk_path }}
+          if-no-files-found: error
