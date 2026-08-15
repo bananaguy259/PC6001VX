@@ -9,7 +9,7 @@ on:
 env:
   QT_VERSION: '6.8.3'
   ANDROID_NDK_VERSION: '27.2.12479018'
-  ANDROID_PLATFORM_VERSION: '34'
+  ANDROID_PLATFORM_VERSION: '36'
   ANDROID_BUILD_TOOLS: '34.0.0'
 
 jobs:
@@ -63,6 +63,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DANDROID_SDK_ROOT="${ANDROID_SDK_ROOT}" \
             -DANDROID_NDK_ROOT="${ANDROID_SDK_ROOT}/ndk/${ANDROID_NDK_VERSION}" \
+            -DPC6001VX_ANDROID_TARGET_SDK_VERSION=36 \
             -S "${{ github.workspace }}" \
             -B "${{ github.workspace }}/build"
 
