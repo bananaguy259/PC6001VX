@@ -1841,6 +1841,12 @@ int OSD_ConfigDialog( HWINDOW hwnd )
 			ecfg->Write();
 			// レイアウトに関する設定を画面に反映
 			qobject_cast<MainWidget*>(window)->updateLayout();
+			// 設定変更を即座に反映させるため、VMを再起動する
+			// (これがないとアプリを完全に再起動するまで設定が反映されなかった)
+			P6VXApp* app = qobject_cast<P6VXApp*>(qApp);
+			if (app) {
+				app->reloadSettingsAndRestart();
+			}
 		}
 		return ret;
 	}

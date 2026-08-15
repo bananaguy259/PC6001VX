@@ -88,6 +88,10 @@ public:
 	bool isSafeMode();
 	void enableSafeMode(bool enable);
 
+	// 設定変更後にVMを再起動して即座に反映させる
+	// (これを呼ばないと、アプリを完全に再起動するまで設定変更が反映されない)
+	void reloadSettingsAndRestart();
+
 	// デバッグ用に一時的にROMパスを切り替える(主にAndroid用)
 	QString getCustomRomPath();
 	void setCustomRomPath(QString path);

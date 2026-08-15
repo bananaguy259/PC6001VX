@@ -22,6 +22,7 @@
 #include "keypanel.h"
 #include "keystatewatcher.h"
 #include "setupwizard.h"
+#include "gamelibrarydialog.h"
 #include "p6vxapp.h"
 
 
@@ -629,6 +630,17 @@ void P6VXApp::enableSafeMode(bool enable)
 	SafeMode = enable;
 }
 
+void P6VXApp::reloadSettingsAndRestart()
+{
+	// 実行中のVMを終了し、INIファイルを再読込みしてから再起動する。
+	// これによりConfigDialog等での設定変更が、アプリ再起動なしで即座に反映される。
+	terminateEmulation();
+	if (Cfg->Init()) {
+		Restart = EL6::Restart;
+		emit vmRestart();
+	}
+}
+
 QString P6VXApp::getCustomRomPath()
 {
 	QMutexLocker lock(&PropretyMutex);
@@ -856,6 +868,30 @@ void P6VXApp::executeEmulation()
 	// キーボード状態監視
 	KeyWatcher = new KeyStateWatcher(P6Core->GetKeyboard(), P6Core->GetJoystick(), this);
 	MWidget->setKeyStateWatcher(KeyWatcher);
+
+	// ゲームライブラリから選択されたファイルを起動時にロード
+	// (設定変更等による内部再起動(Restart==EL6::Restart等)の場合は再表示しない。
+	//  純粋なアプリ起動(EL6::Quit)の時だけ表示する)
+	if (Restart == EL6::Quit && !property("pendingGameFile").isValid()) {
+		GameLibraryDialog libDialog(P6VPATH2QSTR(Cfg->GetValue(CF_TapePath)),
+									 P6VPATH2QSTR(Cfg->GetValue(CF_DiskPath)),
+									 MWidget);
+		if (libDialog.exec() == QDialog::Accepted) {
+			setProperty("pendingGameFile", libDialog.selectedFilePath());
+		}
+	}
+	auto pendingGameFile = property("pendingGameFile");
+	if (pendingGameFile.isValid()) {
+		auto gamePath = QSTR2P6VPATH(pendingGameFile.toString());
+		setProperty("pendingGameFile", QVariant());
+		std::string ext = OSD_GetFileNameExt(gamePath);
+		std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+		if (ext == EXT_P6RAW || ext == EXT_CAS || ext == EXT_P6T) {
+			P6Core->UI_TapeInsert(gamePath);
+		} else if (ext == EXT_DISK) {
+			P6Core->UI_DiskInsert(0, gamePath);
+		}
+	}
 
 	// 以降、ウィンドウが閉じたらアプリを終了する
 	connect(this, SIGNAL(lastWindowClosed()), this, SLOT(terminateEmulation()));

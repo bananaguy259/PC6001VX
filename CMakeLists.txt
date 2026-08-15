@@ -151,6 +151,7 @@ set(PC6001VX_SOURCES
     src/Qt/configdialog.cpp
     src/Qt/cthread.cpp
     src/Qt/emulationadaptor.cpp
+    src/Qt/gamelibrarydialog.cpp
     src/Qt/keypanel.cpp
     src/Qt/keypanelbutton.cpp
     src/Qt/keystatewatcher.cpp
@@ -228,6 +229,7 @@ set(PC6001VX_HEADERS
     src/Qt/configdialog.h
     src/Qt/cthread.h
     src/Qt/emulationadaptor.h
+    src/Qt/gamelibrarydialog.h
     src/Qt/keypanel.h
     src/Qt/keypanelbutton.h
     src/Qt/keystatewatcher.h
