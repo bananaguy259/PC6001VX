@@ -21,6 +21,7 @@
 #include "mainwidget.h"
 #include "keypanel.h"
 #include "keystatewatcher.h"
+#include "setupwizard.h"
 #include "p6vxapp.h"
 
 
@@ -707,40 +708,21 @@ void P6VXApp::executeEmulation()
 			Error::SetError( Error::NoError );
 		}
 	}else{
-		bool romFolderSpecified = false;
-		if(OSD_Message(P6Core ? P6Core->GetWindowHandle() : nullptr,
-					   tr("ROMファイルが見つかりません。\n"
-								  "ROMフォルダ(%1)にROMファイルをコピーするか、"
-								  "別のROMフォルダを指定してください。\n"
-								  "別のROMフォルダを指定しますか?").arg(P6VPATH2QSTR(Cfg->GetValue(CF_RomPath))).toStdString(),
-					   GetText(TERR_ERROR), OSDM_YESNO | OSDM_ICONWARNING ) == OSDR_YES){
-			// ROMフォルダ再設定
-			P6VPATH folder = Cfg->GetValue(CF_RomPath);
-			OSD_AddDelimiter(folder);
-			OSD_FolderDiaog(MWidget, folder);
-			OSD_DelDelimiter(folder);
-
-			if(!folder.empty()){
-				Cfg->SetValue(CF_RomPath, folder);
-				Cfg->Write();
-				Restart = EL6::Restart;
-				romFolderSpecified = true;
-			}
-		}
-		if (!romFolderSpecified){
-			// 互換ROMを使用するか問い合わせる
-			int ret = OSD_Message( P6Core ? P6Core->GetWindowHandle() : nullptr,
-								   tr("エミュレーター内蔵の互換ROMを使用しますか?").toStdString(),
-								   APPNAME, OSDM_YESNO | OSDM_ICONQUESTION );
-			if(ret == OSDR_YES) {
+		// ROMが見つからない場合、セットアップウィザードを表示して
+		// 互換ROM使用 or 独自ROMフォルダの指定を一度の画面遷移で行う。
+		SetupWizard wizard(P6VPATH2QSTR(Cfg->GetValue(CF_RomPath)), MWidget);
+		if (wizard.exec() == QDialog::Accepted) {
+			if (wizard.useCompatibleRom()) {
 				enableCompatibleRomMode(Cfg, true);
-				Cfg->Write();
-				Restart = EL6::Restart;
 			} else {
-				terminateEmulation();
-				exit();
-				return;
+				Cfg->SetValue(CF_RomPath, QSTR2P6VPATH(wizard.selectedRomFolder()));
 			}
+			Cfg->Write();
+			Restart = EL6::Restart;
+		} else {
+			terminateEmulation();
+			exit();
+			return;
 		}
 		emit vmRestart();
 		return;

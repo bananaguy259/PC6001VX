@@ -162,6 +162,7 @@ set(PC6001VX_SOURCES
     src/Qt/pc6001v.cpp
     src/Qt/qtel6.cpp
     src/Qt/renderview.cpp
+    src/Qt/setupwizard.cpp
     src/Qt/simplevirtualkeyboardscene.cpp
     src/Qt/systeminfodialog.cpp
     src/Qt/virtualkeyboardscene.cpp
@@ -236,6 +237,7 @@ set(PC6001VX_HEADERS
     src/Qt/qtel6.h
     src/Qt/qtutil.h
     src/Qt/renderview.h
+    src/Qt/setupwizard.h
     src/Qt/simplevirtualkeyboardscene.h
     src/Qt/systeminfodialog.h
     src/Qt/virtualkeyboardscene.h
