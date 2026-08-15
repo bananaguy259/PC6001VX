@@ -41,6 +41,7 @@ jobs:
           version: ${{ env.QT_VERSION }}
           target: desktop
           arch: linux_gcc_64
+          modules: 'qtmultimedia'
           set-env: false
 
       - name: Install Qt (Android arm64-v8a)
@@ -49,6 +50,7 @@ jobs:
           version: ${{ env.QT_VERSION }}
           target: android
           arch: android_arm64_v8a
+          modules: 'qtmultimedia'
           set-env: true
 
       - name: Install Ninja
