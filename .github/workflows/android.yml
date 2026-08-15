@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  QT_VERSION: '6.8.3'
+  QT_VERSION: '6.9.1'
   ANDROID_NDK_VERSION: '27.2.12479018'
   ANDROID_PLATFORM_VERSION: '36'
   ANDROID_BUILD_TOOLS: '34.0.0'
